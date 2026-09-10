@@ -1,0 +1,17 @@
+# 编译输出
+out/
+src/out/
+target/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# 运行时序列化数据
+*.dat
+
+# 日志与系统文件
+*.log
+.DS_Store
+Thumbs.db
