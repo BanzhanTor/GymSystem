@@ -32,9 +32,9 @@ CREATE TABLE record (
 
 -- 初始会员卡类型
 INSERT INTO card_type(name, price, days) VALUES
-('月卡', 300, 30),
+('月卡', 350, 30),
 ('季卡', 800, 90),
 ('年卡', 2800, 365),
-('次卡', 100, 1);
+('次卡', 15, 1);
 
 SELECT 'gym 数据库初始化完成' AS result;

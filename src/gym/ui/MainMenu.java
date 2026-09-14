@@ -104,7 +104,7 @@ public class MainMenu {
                     if (cardTypeService.delete(id)) {
                         System.out.println("删除成功");
                     } else {
-                        System.out.println("删除失败");
+                        System.out.println("删除失败：该卡类型仍有会员在使用，无法删除");
                     }
                     break;
                 }
@@ -193,6 +193,8 @@ public class MainMenu {
         Member m = new Member(name, phone, gender, cardTypeId, DateUtil.currentDate(), null);
         if (memberService.add(m)) {
             System.out.println("新增成功，到期日期：" + m.getExpireDate());
+        } else if (memberService.searchByPhone(phone) != null) {
+            System.out.println("新增失败：该手机号已存在会员，请勿重复添加");
         } else {
             System.out.println("新增失败");
         }
@@ -243,7 +245,7 @@ public class MainMenu {
                     if (recordService.enter(id)) {
                         System.out.println("入场打卡成功：" + DateUtil.currentDateTime());
                     } else {
-                        System.out.println("打卡失败");
+                        System.out.println("打卡失败：该会员已在场，请先离场");
                     }
                     break;
                 }

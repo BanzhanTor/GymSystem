@@ -3,6 +3,7 @@ package gym.service;
 import gym.dao.CardTypeDAO;
 import gym.dao.CardTypeDAOImpl;
 import gym.entity.CardType;
+import gym.entity.Member;
 
 import java.util.List;
 
@@ -12,12 +13,18 @@ import java.util.List;
 public class CardTypeService {
 
     private final CardTypeDAO dao = new CardTypeDAOImpl();
+    private final MemberService memberService = new MemberService();
 
     public boolean add(CardType cardType) {
         return dao.save(cardType);
     }
 
     public boolean delete(int id) {
+        for (Member m : memberService.list()) {
+            if (m.getCardTypeId() == id) {
+                return false; // 仍有会员使用该卡类型，禁止删除
+            }
+        }
         return dao.delete(id);
     }
 

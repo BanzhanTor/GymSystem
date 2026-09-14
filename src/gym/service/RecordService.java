@@ -17,8 +17,15 @@ public class RecordService {
 
     private final RecordDAO dao = new RecordDAOImpl();
 
-    /** 入场打卡：记录进入时间 */
+    /** 入场打卡：记录进入时间；已在场（有未离场记录）时禁止重复打卡 */
     public boolean enter(int memberId) {
+        List<InOutRecord> records = dao.findByMemberId(memberId);
+        for (int i = records.size() - 1; i >= 0; i--) {
+            InOutRecord r = records.get(i);
+            if (r.getLeaveTime() == null || r.getLeaveTime().isEmpty()) {
+                return false; // 已在场，禁止重复打卡
+            }
+        }
         InOutRecord record = new InOutRecord(memberId, DateUtil.currentDateTime(), null);
         return dao.save(record);
     }

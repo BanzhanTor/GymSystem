@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健身房管理系统</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --panel: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --brand: #10b981;
+    --brand-dark: #059669;
+    --brand-soft: #d1fae5;
+    --danger: #ef4444;
+    --danger-soft: #fee2e2;
+    --warn: #f59e0b;
+    --warn-soft: #fef3c7;
+    --line: #e2e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  header {
+    background: linear-gradient(120deg, #0f172a, #134e4a);
+    color: #fff;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--brand);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; color: #052e22;
+  }
+  .brand h1 { font-size: 19px; margin: 0; }
+  .brand p { margin: 0; font-size: 12px; color: #a7f3d0; }
+
+  nav {
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 4px;
+    padding: 0 20px;
+    overflow-x: auto;
+    position: sticky; top: 0; z-index: 20;
+  }
+  nav button {
+    border: none; background: none; cursor: pointer;
+    padding: 14px 16px; font-size: 14px; color: var(--muted);
+    border-bottom: 2px solid transparent; white-space: nowrap;
+  }
+  nav button.active { color: var(--brand-dark); border-bottom-color: var(--brand); font-weight: 600; }
+  nav button:hover { color: var(--ink); }
+
+  .wrap { max-width: 1080px; margin: 24px auto; padding: 0 20px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 18px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+  }
+  .card h2 { margin: 0 0 6px; font-size: 16px; }
+  .card .sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+
+  .grid { display: grid; gap: 16px; }
+  .stats { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px; text-align: center;
+  }
+  .stat .num { font-size: 30px; font-weight: 800; color: var(--brand-dark); }
+  .stat .label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; background: #f8fafc; }
+  tr:hover td { background: #fafbfc; }
+
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .badge.ok { background: var(--brand-soft); color: var(--brand-dark); }
+  .badge.warn { background: var(--warn-soft); color: #92400e; }
+  .badge.danger { background: var(--danger-soft); color: #991b1b; }
+  .badge.gray { background: #e2e8f0; color: var(--muted); }
+
+  .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 14px; background: #fff; color: var(--ink);
+  }
+  .field input:focus, .field select:focus { outline: 2px solid var(--brand-soft); border-color: var(--brand); }
+
+  .btn {
+    border: none; cursor: pointer; border-radius: 8px; padding: 9px 16px;
+    font-size: 14px; font-weight: 600; background: #e2e8f0; color: var(--ink);
+  }
+  .btn:hover { filter: brightness(.97); }
+  .btn.primary { background: var(--brand); color: #fff; }
+  .btn.primary:hover { background: var(--brand-dark); }
+  .btn.danger { background: var(--danger); color: #fff; }
+  .btn.sm { padding: 5px 10px; font-size: 13px; }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #0f172a; color: #fff; padding: 11px 18px; border-radius: 10px;
+    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .3s;
+    max-width: 90vw; z-index: 2000;
+  }
+  .toast.show { opacity: 1; }
+  .toast.err { background: var(--danger); }
+  .toast.ok { background: var(--brand-dark); }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .seg { display: inline-flex; background: #eef2f7; border-radius: 10px; padding: 3px; }
+  .seg button { border: none; background: none; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--muted); }
+  .seg button.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(15,23,42,.12); font-weight: 600; }
+
+  .empty { text-align: center; color: var(--muted); padding: 28px; font-size: 14px; }
+  .muted { color: var(--muted); }
+  .right { text-align: right; }
+  .foot-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+  #login-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: linear-gradient(135deg, #0f172a, #134e4a);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .login-box {
+    width: 340px; max-width: 100%; background: #fff; border-radius: 18px; padding: 34px 30px;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .login-box .logo {
+    width: 52px; height: 52px; border-radius: 14px; background: var(--brand);
+    color: #052e22; font-weight: 800; font-size: 22px;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto;
+  }
+  .login-title { margin: 0; text-align: center; font-size: 20px; color: var(--ink); }
+  .login-sub { margin: 0; text-align: center; color: var(--muted); font-size: 13px; }
+  .login-input { padding: 11px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; }
+  .login-input:focus { outline: 2px solid var(--brand-soft); border-color: var(--brand); }
+  .login-btn { padding: 12px; font-size: 15px; }
+  .login-hint { margin: 0; text-align: center; color: var(--muted); font-size: 12px; }
+
+  .user-area { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-size: 13px; color: #cbd5e1; }
+  .user-name b { color: #fff; }
+
+  @media (max-width: 640px) {
+    .form { grid-template-columns: 1fr 1fr; }
+    header { padding: 14px 16px; }
+    .wrap { margin: 14px auto; padding: 0 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="logo">GYM</div>
+    <h1 class="login-title">健身房管理系统</h1>
+    <p class="login-sub">请登录后使用</p>
+    <input id="login-user" class="login-input" placeholder="用户名" autocomplete="username">
+    <input id="login-pwd" class="login-input" type="password" placeholder="密码" autocomplete="current-password">
+    <button id="btn-login" class="btn primary login-btn">登 录</button>
+    <p class="login-hint">默认账号：admin　密码：123456</p>
+  </div>
+</div>
+<header>
+  <div class="brand">
+    <div class="logo">GYM</div>
+    <div>
+      <h1>健身房管理系统</h1>
+      <p>会员 · 卡类型 · 进出记录 · 统计</p>
+    </div>
+  </div>
+  <div class="user-area">
+    <span class="user-name">当前用户：<b id="display-user">admin</b></span>
+    <button class="btn ghost" id="btn-logout" style="color:#fff;border-color:rgba(255,255,255,.4)">退出登录</button>
+  </div>
+</header>
+
+<nav>
+  <button data-view="dashboard" class="active">仪表盘</button>
+  <button data-view="cardtype">卡类型管理</button>
+  <button data-view="member">会员管理</button>
+  <button data-view="record">进出记录</button>
+  <button data-view="expire">到期提醒</button>
+  <button data-view="admin">系统管理</button>
+</nav>
+
+<div class="wrap">
+  <section id="view-dashboard" class="view active"></section>
+  <section id="view-cardtype" class="view"></section>
+  <section id="view-member" class="view"></section>
+  <section id="view-record" class="view"></section>
+  <section id="view-expire" class="view"></section>
+  <section id="view-admin" class="view"></section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'gym_web_data_v1';
+
+  var DEFAULT = {
+    cardTypes: [
+      { id: 1, name: '月卡', price: 350, days: 30 },
+      { id: 2, name: '季卡', price: 800, days: 90 },
+      { id: 3, name: '年卡', price: 2800, days: 365 },
+      { id: 4, name: '次卡', price: 15, days: 1 }
+    ],
+    members: [],
+    records: [],
+    seq: { cardType: 5, member: 1, record: 1 }
+  };
+
+  var DB = load();
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    var d = JSON.parse(JSON.stringify(DEFAULT));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+    return d;
+  }
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+  }
+  function resetAll() {
+    DB = JSON.parse(JSON.stringify(DEFAULT));
+    persist();
+    render();
+    toast('已恢复为原始数据（4 种卡类型）', 'ok');
+  }
+
+  function doLogin() {
+    var u = document.getElementById('login-user').value.trim();
+    var p = document.getElementById('login-pwd').value;
+    if (u === 'admin' && p === '123456') {
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('login-pwd').value = '';
+      render();
+      toast('登录成功，欢迎 admin', 'ok');
+    } else {
+      toast('用户名或密码错误', 'err');
+    }
+  }
+  function doLogout() {
+    document.getElementById('login-pwd').value = '';
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('login-user').focus();
+  }
+
+  // ---------- 日期工具 ----------
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function todayStr() { return fmtDate(new Date()); }
+  function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function fmtDateTime(d) { return fmtDate(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+  function parseDate(s) {
+    var p = s.split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function addDays(s, days) {
+    var d = parseDate(s);
+    d.setDate(d.getDate() + days);
+    return fmtDate(d);
+  }
+  function daysUntil(s) {
+    var a = parseDate(s).getTime();
+    var b = parseDate(todayStr()).getTime();
+    return Math.round((a - b) / 86400000);
+  }
+
+  // ---------- 通用 ----------
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function cardTypeName(id) {
+    var ct = DB.cardTypes.find(function (c) { return c.id === id; });
+    return ct ? ct.name : '未知';
+  }
+  function toast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || '');
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.className = 'toast'; }, 2600);
+  }
+  function emptyHtml(txt) { return '<div class="empty">' + esc(txt || '暂无数据') + '</div>'; }
+
+  // ---------- 表格渲染 ----------
+  function renderTable(heads, rowsHtml, emptyTxt) {
+    if (!rowsHtml) return emptyHtml(emptyTxt);
+    var head = heads.map(function (h) { return '<th>' + h + '</th>'; }).join('');
+    return '<table><thead><tr>' + head + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+  }
+
+  // ---------- 仪表盘 ----------
+  function renderDashboard() {
+    var total = DB.members.length;
+    var typeCount = DB.cardTypes.length;
+    var expiring = DB.members.filter(function (m) { var d = daysUntil(m.expireDate); return d >= 0 && d <= 7; }).length;
+    var expired = DB.members.filter(function (m) { return daysUntil(m.expireDate) < 0; }).length;
+    var today = todayStr();
+    var todayEnter = DB.records.filter(function (r) { return r.enterTime.slice(0, 10) === today; }).length;
+
+    var byType = {};
+    DB.members.forEach(function (m) {
+      var n = cardTypeName(m.cardTypeId);
+      byType[n] = (byType[n] || 0) + 1;
+    });
+    var typeRows = Object.keys(byType).map(function (k) {
+      return '<tr><td>' + esc(k) + '</td><td>' + byType[k] + ' 人</td></tr>';
+    }).join('') || '<tr><td colspan="2" class="muted">暂无会员</td></tr>';
+
+    var avgStay = averageStay();
+
+    document.getElementById('view-dashboard').innerHTML =
+      '<div class="grid stats">' +
+      '<div class="stat"><div class="num">' + total + '</div><div class="label">会员总数</div></div>' +
+      '<div class="stat"><div class="num">' + typeCount + '</div><div class="label">卡类型</div></div>' +
+      '<div class="stat"><div class="num">' + todayEnter + '</div><div class="label">今日入场</div></div>' +
+      '<div class="stat"><div class="num">' + expiring + '</div><div class="label">7 天内到期</div></div>' +
+      '<div class="stat"><div class="num">' + expired + '</div><div class="label">已过期</div></div>' +
+      '<div class="stat"><div class="num">' + avgStay + '</div><div class="label">平均停留(分)</div></div>' +
+      '</div>' +
+      '<div class="card"><h2>各卡类型会员人数</h2>' +
+      '<table><thead><tr><th>卡类型</th><th>人数</th></tr></thead><tbody>' + typeRows + '</tbody></table></div>';
+  }
+
+  function averageStay() {
+    var done = DB.records.filter(function (r) { return r.enterTime && r.leaveTime; });
+    if (!done.length) return 0;
+    var sum = 0;
+    done.forEach(function (r) {
+      var ms = new Date(r.leaveTime).getTime() - new Date(r.enterTime).getTime();
+      sum += ms / 60000;
+    });
+    return Math.round(sum / done.length);
+  }
+
+  // ---------- 卡类型 ----------
+  function renderCardType() {
+    var rows = DB.cardTypes.map(function (c) {
+      var used = DB.members.some(function (m) { return m.cardTypeId === c.id; });
+      return '<tr>' +
+        '<td>' + c.id + '</td>' +
+        '<td>' + esc(c.name) + '</td>' +
+        '<td>' + c.price + ' 元</td>' +
+        '<td>' + c.days + ' 天</td>' +
+        '<td>' + (used ? '<span class="badge ok">使用中 (' + DB.members.filter(function(m){return m.cardTypeId===c.id;}).length + ')人</span>' : '<span class="badge gray">无会员</span>') + '</td>' +
+        '<td class="right"><button class="btn sm danger" data-deltype="' + c.id + '">删除</button></td>' +
+        '</tr>';
+    }).join('');
+
+    document.getElementById('view-cardtype').innerHTML =
+      '<div class="card"><h2>会员卡类型</h2><p class="sub">原始数据：月卡 / 季卡 / 年卡 / 次卡</p>' +
+      renderTable(['ID', '名称', '价格', '有效天数', '状态', ''], rows, '暂无卡类型') +
+      '</div>' +
+      '<div class="card"><h2>新增卡类型</h2>' +
+      '<div class="form">' +
+      '<div class="field"><label>名称</label><input id="ct-name" placeholder="如：月卡"></div>' +
+      '<div class="field"><label>价格（元）</label><input id="ct-price" type="number" value="0"></div>' +
+      '<div class="field"><label>有效天数</label><input id="ct-days" type="number" value="30"></div>' +
+      '<button class="btn primary" id="btn-add-ct">新增</button>' +
+      '</div></div>';
+  }
+
+  function addCardType() {
+    var name = document.getElementById('ct-name').value.trim();
+    var price = parseFloat(document.getElementById('ct-price').value) || 0;
+    var days = parseInt(document.getElementById('ct-days').value, 10) || 0;
+    if (!name) { toast('请输入卡类型名称', 'err'); return; }
+    if (DB.cardTypes.some(function (c) { return c.name === name; })) { toast('该卡类型名称已存在', 'err'); return; }
+    DB.cardTypes.push({ id: DB.seq.cardType++, name: name, price: price, days: days });
+    persist(); render();
+    toast('新增成功', 'ok');
+  }
+
+  function deleteCardType(id) {
+    if (DB.members.some(function (m) { return m.cardTypeId === id; })) {
+      toast('删除失败：该卡类型仍有会员使用', 'err');
+      return;
+    }
+    DB.cardTypes = DB.cardTypes.filter(function (c) { return c.id !== id; });
+    persist(); render();
+    toast('删除成功', 'ok');
+  }
+
+  // ---------- 会员 ----------
+  function renderMember(filter) {
+    filter = filter || '';
+    var list = DB.members.filter(function (m) {
+      if (!filter) return true;
+      return m.name.indexOf(filter) >= 0 || (m.phone && m.phone.indexOf(filter) >= 0);
+    });
+
+    var typeOptions = DB.cardTypes.map(function (c) {
+      return '<option value="' + c.id + '">' + esc(c.name) + '（' + c.days + ' 天）</option>';
+    }).join('');
+
+    var rows = list.map(function (m) {
+      var d = daysUntil(m.expireDate);
+      var status = d < 0 ? '<span class="badge danger">已过期</span>'
+        : (d <= 7 ? '<span class="badge warn">' + d + ' 天后到期</span>'
+        : '<span class="badge ok">有效</span>');
+      return '<tr>' +
+        '<td>' + m.id + '</td>' +
+        '<td>' + esc(m.name) + '</td>' +
+        '<td>' + esc(m.phone || '-') + '</td>' +
+        '<td>' + esc(m.gender || '-') + '</td>' +
+        '<td>' + esc(cardTypeName(m.cardTypeId)) + '</td>' +
+        '<td>' + esc(m.joinDate) + '</td>' +
+        '<td>' + esc(m.expireDate) + '</td>' +
+        '<td>' + status + '</td>' +
+        '<td class="right"><button class="btn sm" data-editmember="' + m.id + '">编辑</button> ' +
+        '<button class="btn sm danger" data-delmember="' + m.id + '">删除</button></td>' +
+        '</tr>';
+    }).join('');
+
+    document.getElementById('view-member').innerHTML =
+      '<div class="card"><h2>会员列表</h2>' +
+      '<div class="toolbar"><input class="field" id="member-search" placeholder="按姓名或手机号搜索" style="flex:1;min-width:180px;padding:9px 10px;border:1px solid var(--line);border-radius:8px"></div>' +
+      renderTable(['ID', '姓名', '手机号', '性别', '卡类型', '办卡日期', '到期日期', '状态', ''], rows, filter ? '未找到匹配会员' : '暂无会员') +
+      '</div>' +
+      '<div class="card"><h2>新增会员</h2>' +
+      '<div class="form">' +
+      '<div class="field"><label>姓名</label><input id="m-name" placeholder="张三"></div>' +
+      '<div class="field"><label>手机号（唯一）</label><input id="m-phone" placeholder="13800001111"></div>' +
+      '<div class="field"><label>性别</label><select id="m-gender"><option value="男">男</option><option value="女">女</option></select></div>' +
+      '<div class="field"><label>卡类型</label><select id="m-type">' + typeOptions + '</select></div>' +
+      '<button class="btn primary" id="btn-add-member">新增会员</button>' +
+      '</div></div>' +
+      '<div class="card" id="edit-card" style="display:none"><h2>编辑会员</h2>' +
+      '<input type="hidden" id="e-id">' +
+      '<div class="form">' +
+      '<div class="field"><label>姓名</label><input id="e-name"></div>' +
+      '<div class="field"><label>手机号</label><input id="e-phone"></div>' +
+      '<div class="field"><label>性别</label><select id="e-gender"><option>男</option><option>女</option></select></div>' +
+      '<div class="field"><label>卡类型</label><select id="e-type">' + typeOptions + '</select></div>' +
+      '<button class="btn primary" id="btn-save-edit">保存</button>' +
+      '<button class="btn" id="btn-cancel-edit">取消</button>' +
+      '</div></div>';
+    var si = document.getElementById('member-search');
+    if (memberSearchFocused && si) {
+      si.focus();
+      si.setSelectionRange(si.value.length, si.value.length);
+    }
+  }
+
+  function addMember() {
+    var name = document.getElementById('m-name').value.trim();
+    var phone = document.getElementById('m-phone').value.trim();
+    var gender = document.getElementById('m-gender').value;
+    var typeId = parseInt(document.getElementById('m-type').value, 10);
+
+    if (!name) { toast('请输入姓名', 'err'); return; }
+    if (!phone) { toast('请输入手机号', 'err'); return; }
+    if (DB.members.some(function (m) { return m.phone === phone; })) { toast('新增失败：该手机号已存在', 'err'); return; }
+
+    var ct = DB.cardTypes.find(function (c) { return c.id === typeId; });
+    var join = todayStr();
+    var expire = ct ? addDays(join, ct.days) : join;
+
+    DB.members.push({ id: DB.seq.member++, name: name, phone: phone, gender: gender, cardTypeId: typeId, joinDate: join, expireDate: expire });
+    persist(); render();
+    toast('新增成功，到期日期：' + expire, 'ok');
+  }
+
+  function openEdit(id) {
+    var m = DB.members.find(function (x) { return x.id === id; });
+    if (!m) return;
+    document.getElementById('edit-card').style.display = 'block';
+    document.getElementById('e-id').value = m.id;
+    document.getElementById('e-name').value = m.name;
+    document.getElementById('e-phone').value = m.phone || '';
+    document.getElementById('e-gender').value = m.gender || '男';
+    document.getElementById('e-type').value = m.cardTypeId;
+    document.getElementById('edit-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function saveEdit() {
+    var id = parseInt(document.getElementById('e-id').value, 10);
+    var m = DB.members.find(function (x) { return x.id === id; });
+    if (!m) return;
+    var name = document.getElementById('e-name').value.trim();
+    var phone = document.getElementById('e-phone').value.trim();
+    var gender = document.getElementById('e-gender').value;
+    var typeId = parseInt(document.getElementById('e-type').value, 10);
+    if (!name) { toast('请输入姓名', 'err'); return; }
+    if (!phone) { toast('请输入手机号', 'err'); return; }
+    if (DB.members.some(function (x) { return x.phone === phone && x.id !== id; })) { toast('保存失败：该手机号已存在', 'err'); return; }
+
+    m.name = name; m.phone = phone; m.gender = gender; m.cardTypeId = typeId;
+    var ct = DB.cardTypes.find(function (c) { return c.id === typeId; });
+    m.expireDate = ct ? addDays(m.joinDate, ct.days) : m.expireDate;
+    persist(); render();
+    toast('已保存', 'ok');
+  }
+  function deleteMember(id) {
+    DB.members = DB.members.filter(function (m) { return m.id !== id; });
+    persist(); render();
+    toast('会员已删除', 'ok');
+  }
+
+  // ---------- 进出记录 ----------
+  function renderRecord() {
+    var activeMembers = DB.members;
+    var memberOptions = activeMembers.map(function (m) {
+      var inGym = DB.records.some(function (r) { return r.memberId === m.id && !r.leaveTime; });
+      return '<option value="' + m.id + '">' + esc(m.name) + '（' + esc(m.phone || '') + '）' + (inGym ? ' · 在场' : '') + '</option>';
+    }).join('');
+
+    var rows = DB.records.slice().sort(function (a, b) { return b.id - a.id; }).map(function (r) {
+      var m = DB.members.find(function (x) { return x.id === r.memberId; });
+      var name = m ? m.name : ('会员#' + r.memberId);
+      var stay = '';
+      if (r.enterTime && r.leaveTime) {
+        stay = Math.round((new Date(r.leaveTime).getTime() - new Date(r.enterTime).getTime()) / 60000) + ' 分钟';
+      }
+      return '<tr>' +
+        '<td>' + r.id + '</td>' +
+        '<td>' + esc(name) + '</td>' +
+        '<td>' + esc(r.enterTime || '-') + '</td>' +
+        '<td>' + esc(r.leaveTime || '<span class="badge gray">在场</span>') + '</td>' +
+        '<td>' + (stay || '-') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    document.getElementById('view-record').innerHTML =
+      '<div class="card"><h2>入场 / 离场打卡</h2>' +
+      '<div class="form">' +
+      '<div class="field"><label>选择会员</label><select id="r-member">' + (memberOptions || '<option value="-1">请先添加会员</option>') + '</select></div>' +
+      '<button class="btn primary" id="btn-enter">入场打卡</button>' +
+      '<button class="btn" id="btn-leave">离场登记</button>' +
+      '</div></div>' +
+      '<div class="card"><h2>全部进出记录</h2>' +
+      renderTable(['ID', '会员', '入场时间', '离场时间', '停留'], rows, '暂无记录') +
+      '</div>';
+  }
+
+  function memberEnter() {
+    var id = parseInt(document.getElementById('r-member').value, 10);
+    if (!id || id < 0) { toast('请先选择会员', 'err'); return; }
+    var inGym = false;
+    for (var i = DB.records.length - 1; i >= 0; i--) {
+      if (DB.records[i].memberId === id && !DB.records[i].leaveTime) { inGym = true; break; }
+    }
+    if (inGym) { toast('打卡失败：该会员已在场，请先离场后再打卡', 'err'); return; }
+    DB.records.push({ id: DB.seq.record++, memberId: id, enterTime: fmtDateTime(new Date()), leaveTime: null });
+    persist(); render();
+    toast('入场打卡成功', 'ok');
+  }
+  function memberLeave() {
+    var id = parseInt(document.getElementById('r-member').value, 10);
+    if (!id || id < 0) { toast('请先选择会员', 'err'); return; }
+    var open = null;
+    for (var i = DB.records.length - 1; i >= 0; i--) {
+      var r = DB.records[i];
+      if (r.memberId === id && !r.leaveTime) { open = r; break; }
+    }
+    if (!open) { toast('离场失败：该会员当前不在场，请先打卡', 'err'); return; }
+    open.leaveTime = fmtDateTime(new Date());
+    persist(); render();
+    toast('离场登记成功', 'ok');
+  }
+
+  // ---------- 到期提醒 ----------
+  function renderExpire() {
+    var day7 = DB.members.filter(function (m) { var d = daysUntil(m.expireDate); return d >= 0 && d <= 7; });
+    var day30 = DB.members.filter(function (m) { var d = daysUntil(m.expireDate); return d >= 0 && d <= 30; });
+    var past = DB.members.filter(function (m) { return daysUntil(m.expireDate) < 0; });
+
+    function rows(list, badgeCls, leftFn) {
+      return list.map(function (m) {
+        var left = daysUntil(m.expireDate);
+        return '<tr><td>' + m.id + '</td><td>' + esc(m.name) + '</td><td>' + esc(m.phone || '-') + '</td>' +
+          '<td>' + esc(cardTypeName(m.cardTypeId)) + '</td><td>' + esc(m.expireDate) + '</td>' +
+          '<td>' + leftFn(left) + '</td></tr>';
+      }).join('');
+    }
+
+    document.getElementById('view-expire').innerHTML =
+      '<div class="card"><h2>7 天内即将到期</h2>' +
+      renderTable(['ID', '姓名', '手机号', '卡类型', '到期日期', '剩余'], rows(day7, 'warn', function (l) { return '<span class="badge warn">' + l + ' 天</span>'; }), '没有 7 天内到期的会员') +
+      '</div>' +
+      '<div class="card"><h2>30 天内即将到期</h2>' +
+      renderTable(['ID', '姓名', '手机号', '卡类型', '到期日期', '剩余'], rows(day30, 'warn', function (l) { return '<span class="badge warn">' + l + ' 天</span>'; }), '没有 30 天内到期的会员') +
+      '</div>' +
+      '<div class="card"><h2>已过期会员</h2>' +
+      renderTable(['ID', '姓名', '手机号', '卡类型', '到期日期', '状态'], rows(past, 'danger', function () { return '<span class="badge danger">已过期</span>'; }), '没有已过期的会员') +
+      '</div>';
+  }
+
+  // ---------- 系统管理（管理员） ----------
+  function renderAdmin() {
+    document.getElementById('view-admin').innerHTML =
+      '<div class="card"><h2>系统管理（管理员）</h2><p class="sub">以下操作会修改当前浏览器内的全部数据，请谨慎。</p>' +
+      '<table><tbody>' +
+      '<tr><td>会员数量</td><td>' + DB.members.length + ' 人</td></tr>' +
+      '<tr><td>卡类型数量</td><td>' + DB.cardTypes.length + ' 种</td></tr>' +
+      '<tr><td>进出记录数量</td><td>' + DB.records.length + ' 条</td></tr>' +
+      '</tbody></table>' +
+      '</div>' +
+      '<div class="card"><h2>数据清理</h2>' +
+      '<div class="toolbar">' +
+      '<button class="btn" data-clear-records>清空进出记录</button>' +
+      '<button class="btn" data-clear-members>清空全部会员</button>' +
+      '<button class="btn danger" data-reset-all>恢复为原始数据</button>' +
+      '</div>' +
+      '<p class="muted" style="margin:6px 0 0;font-size:12px">「恢复为原始数据」会清空会员与进出记录，并把卡类型恢复为初始的 4 种（月卡 / 季卡 / 年卡 / 次卡）。</p>' +
+      '</div>';
+  }
+  function clearRecords() {
+    if (!confirm('确定清空全部进出记录吗？')) return;
+    DB.records = [];
+    persist(); render();
+    toast('已清空进出记录', 'ok');
+  }
+  function clearMembers() {
+    if (!confirm('确定清空全部会员吗？（卡类型保留）')) return;
+    DB.members = [];
+    persist(); render();
+    toast('已清空会员', 'ok');
+  }
+
+  // ---------- 视图切换 & 渲染 ----------
+  var current = 'dashboard';
+  function render() {
+    renderDashboard();
+    renderCardType();
+    renderMember(currentMemberFilter);
+    renderRecord();
+    renderExpire();
+    renderAdmin();
+  }
+  var currentMemberFilter = '';
+
+  function switchView(name) {
+    current = name;
+    document.querySelectorAll('nav button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-view') === name);
+    });
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+    document.getElementById('view-' + name).classList.add('active');
+  }
+
+  // ---------- 事件绑定（委托） ----------
+  document.querySelectorAll('nav button').forEach(function (b) {
+    b.addEventListener('click', function () { switchView(b.getAttribute('data-view')); });
+  });
+  document.getElementById('btn-login').addEventListener('click', doLogin);
+  document.getElementById('login-pwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('btn-logout').addEventListener('click', doLogout);
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.id === 'btn-add-ct') addCardType();
+    else if (t.id === 'btn-add-member') addMember();
+    else if (t.id === 'btn-save-edit') saveEdit();
+    else if (t.id === 'btn-cancel-edit') { document.getElementById('edit-card').style.display = 'none'; }
+    else if (t.id === 'btn-enter') memberEnter();
+    else if (t.id === 'btn-leave') memberLeave();
+    else if (t.getAttribute && t.getAttribute('data-deltype')) deleteCardType(parseInt(t.getAttribute('data-deltype'), 10));
+    else if (t.getAttribute && t.getAttribute('data-delmember')) deleteMember(parseInt(t.getAttribute('data-delmember'), 10));
+    else if (t.getAttribute && t.getAttribute('data-editmember')) openEdit(parseInt(t.getAttribute('data-editmember'), 10));
+    else if (t.hasAttribute && t.hasAttribute('data-reset-all')) { if (confirm('确定恢复为原始数据吗？将清空会员与进出记录，仅保留 4 种卡类型。')) resetAll(); }
+    else if (t.hasAttribute && t.hasAttribute('data-clear-records')) clearRecords();
+    else if (t.hasAttribute && t.hasAttribute('data-clear-members')) clearMembers();
+  });
+
+  var memberSearchFocused = false;
+  document.addEventListener('focusin', function (e) { if (e.target.id === 'member-search') memberSearchFocused = true; });
+  document.addEventListener('focusout', function (e) { if (e.target.id === 'member-search') memberSearchFocused = false; });
+
+  var searchTimer = null;
+  document.addEventListener('input', function (e) {
+    if (e.target.id === 'member-search') {
+      clearTimeout(searchTimer);
+      var val = e.target.value;
+      searchTimer = setTimeout(function () { currentMemberFilter = val; renderMember(val); }, 150);
+    }
+  });
+
+  render();
+  document.getElementById('login-user').focus();
+})();
+</script>
+</body>
+</html>

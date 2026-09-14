@@ -20,6 +20,9 @@ public class MemberService {
 
     /** 新增会员：办卡日期默认为今天，到期日期按卡类型天数自动计算 */
     public boolean add(Member member) {
+        if (member.getPhone() != null && searchByPhone(member.getPhone()) != null) {
+            return false; // 手机号已存在，禁止重复新增
+        }
         if (member.getJoinDate() == null || member.getJoinDate().isEmpty()) {
             member.setJoinDate(DateUtil.currentDate());
         }
